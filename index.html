@@ -3,41 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Xmas - Realistic Magic</title>
+    <title>AI Xmas - Samsung S24+ Optimized</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: 0.8s; }
-        #gesture-canvas { position: absolute; bottom: 20px; right: 15px; width: 100px; height: 100px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; z-index: 50; transform: scaleX(-1); background: rgba(0,0,0,0.3); object-fit: cover; }
+        
+        /* 三星手機優化感應窗 - 圓型雷達 */
+        #gesture-canvas { 
+            position: absolute; bottom: 80px; right: 15px; width: 100px; height: 100px; 
+            border: 2px solid #ffd700; border-radius: 50%; 
+            z-index: 100; transform: scaleX(-1); background: rgba(0,0,0,0.5);
+            object-fit: cover; box-shadow: 0 0 15px rgba(255,215,0,0.3);
+        }
+        
         #gallery-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.96); z-index: 20; opacity: 0; pointer-events: none; transition: 0.5s; }
-        #gallery-photo { max-width: 90%; max-height: 70%; border-radius: 8px; box-shadow: 0 0 30px rgba(255,255,255,0.1); object-fit: contain; }
-        #lib-toggle { position: absolute; top: 15px; left: 15px; z-index: 100; background: rgba(0,0,0,0.4); border: 1px solid #ffd700; color: #fff; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
-        #library { position: absolute; top: 0; left: -100%; width: 80%; max-width: 300px; height: 100%; background: #0a0a0a; z-index: 99; transition: 0.4s; padding: 20px; color: #ccc; overflow-y: auto; }
+        #gallery-photo { max-width: 90%; max-height: 65%; border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.1); object-fit: contain; }
+        
+        #lib-toggle { position: absolute; top: 15px; left: 15px; z-index: 150; background: rgba(255,255,255,0.1); border: 1px solid #ffd700; color: #fff; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; backdrop-filter: blur(5px); }
+        #library { position: absolute; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: #0f0f0f; z-index: 200; transition: 0.4s; padding: 25px; color: #ccc; overflow-y: auto; }
         #library.open { left: 0; }
-        .ui-overlay { position: absolute; top: 10%; width: 100%; pointer-events: none; z-index: 10; text-align: center; color: white; }
-        .main-title { font-size: 1.4rem; letter-spacing: 8px; color: #ffd700; margin-bottom: 5px; text-shadow: 0 0 10px #ffd700; }
-        #status-box { background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 20px; display: inline-block; border: 1px solid rgba(255,215,0,0.2); backdrop-filter: blur(5px); }
+        
+        .ui-overlay { position: absolute; top: 12%; width: 100%; pointer-events: none; z-index: 10; text-align: center; color: white; }
+        .main-title { font-size: 1.5rem; letter-spacing: 6px; color: #ffd700; margin-bottom: 8px; font-weight: 300; }
+        #status-box { background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 25px; display: inline-block; border: 1px solid rgba(255,215,0,0.3); }
+        
+        #video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        
         body.gallery-active #canvas-container { filter: blur(25px) brightness(0.3); }
         body.gallery-active #gallery-container { opacity: 1; pointer-events: auto; }
-        .flash { animation: flash-info 0.5s ease; }
-        @keyframes flash-info { 0% { background: #ffd700; } 100% { background: rgba(0,0,0,0.6); } }
+        .flash { animation: flash-info 0.6s ease; }
+        @keyframes flash-info { 0% { background: #ffd700; color: #000; } 100% { background: rgba(0,0,0,0.7); color: #fff; } }
     </style>
 </head>
 <body>
     <button id="lib-toggle">⚙️</button>
     <div id="library">
-        <h3>📸 照片庫</h3>
+        <h3 style="color:#fff">📸 個人照片庫</h3>
+        <p style="font-size:12px; color:#888;">選擇裝置內照片，AI 將在揮手時展示</p>
         <div id="file-inputs"></div>
-        <button style="width:100%; padding:12px; background:#ffd700; color:#000; border:none; border-radius:8px; font-weight:bold;" onclick="saveLocalPhotos()">儲存並重啟</button>
+        <button style="width:100%; padding:15px; background:#ffd700; color:#000; border:none; border-radius:10px; font-weight:bold; margin-top:20px;" onclick="saveLocalPhotos()">儲存並重啟</button>
     </div>
 
-    <video id="video" style="display:none;" autoplay playsinline muted></video>
+    <video id="video" autoplay playsinline muted></video>
     <canvas id="gesture-canvas"></canvas>
     <div id="canvas-container"></div>
     <div id="gallery-container"><img id="gallery-photo" src=""></div>
 
     <div class="ui-overlay">
-        <div class="main-title">REAL MAGIC XMAS</div>
-        <div id="status-box"><div id="hint-text">請對著鏡頭揮手</div></div>
+        <div class="main-title">STARRY XMAS</div>
+        <div id="status-box"><div id="hint-text">請授權相機權限...</div></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -48,117 +62,108 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // 1. 照片系統
+        // 1. 照片讀取
         let photos = JSON.parse(localStorage.getItem('local_xmas_gallery')) || [];
         const inputContainer = document.getElementById('file-inputs');
-        for(let i=0; i<10; i++) {
-            inputContainer.innerHTML += `<div style="margin-bottom:10px;"><input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})"><img id="prev-${i}" style="width:30px;height:30px;display:${photos[i]?'inline-block':'none'};" src="${photos[i]||''}"></div>`;
+        for(let i=0; i<8; i++) {
+            inputContainer.innerHTML += `<div style="margin-bottom:12px;"><input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})"><img id="prev-${i}" style="width:40px;height:40px;display:${photos[i]?'inline-block':'none'};margin-top:5px;border-radius:4px;" src="${photos[i]||''}"></div>`;
         }
         window.previewFile = (i) => {
             const r = new FileReader(); r.onloadend = () => { const img = document.getElementById(`prev-${i}`); img.src = r.result; img.style.display = 'inline-block'; };
             if (document.getElementById(`f-${i}`).files[0]) r.readAsDataURL(document.getElementById(`f-${i}`).files[0]);
         };
         window.saveLocalPhotos = () => {
-            const np = []; for(let i=0; i<10; i++){ const s = document.getElementById(`prev-${i}`).src; if(s.startsWith('data:')) np.push(s); }
+            const np = []; for(let i=0; i<8; i++){ const s = document.getElementById(`prev-${i}`).src; if(s.startsWith('data:')) np.push(s); }
             localStorage.setItem('local_xmas_gallery', JSON.stringify(np)); location.reload();
         };
         document.getElementById('lib-toggle').onclick = () => document.getElementById('library').classList.toggle('open');
 
-        // 2. Three.js 實體聖誕樹
+        // 2. Three.js 實體樹
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 60);
+        camera.position.z = 65;
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // 燈光
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xffd700, 2, 100); pointLight.position.set(10, 20, 10); scene.add(pointLight);
-
         const treeGroup = new THREE.Group();
-
-        // 2a. 綠色實體樹身
         for(let i=0; i<3; i++) {
             const geo = new THREE.ConeGeometry(18 - i*4, 15, 32);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x0a3d0a, roughness: 0.8 });
-            const part = new THREE.Mesh(geo, mat);
-            part.position.y = i * 8 - 10;
-            treeGroup.add(part);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x0a3d0a });
+            const p = new THREE.Mesh(geo, mat); p.position.y = i*8 - 12;
+            treeGroup.add(p);
         }
-        // 樹幹
-        const trunkGeo = new THREE.CylinderGeometry(2, 2, 6, 16);
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3d1f05 });
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.y = -18;
-        treeGroup.add(trunk);
-
-        // 2b. 螺旋燈串粒子
-        const lightGeo = new THREE.BufferGeometry();
-        const lightPos = [];
-        for(let i=0; i<600; i++) {
-            const t = i / 600;
-            const a = t * Math.PI * 25;
-            const r = (1 - t) * 16;
-            lightPos.push(Math.cos(a)*r, t*40 - 15, Math.sin(a)*r);
-        }
-        lightGeo.setAttribute('position', new THREE.Float32BufferAttribute(lightPos, 3));
-        const lightDots = new THREE.Points(lightGeo, new THREE.PointsMaterial({ color: 0xffeb3b, size: 0.4, blending: THREE.AdditiveBlending }));
-        treeGroup.add(lightDots);
-
-        // 2c. 裝飾球 (隨機燈泡)
-        const colors = [0xff0000, 0xffd700, 0xffffff, 0x00aaff];
-        for(let i=0; i<40; i++) {
-            const t = Math.random();
-            const r = (1-t) * 16;
-            const a = Math.random() * Math.PI * 2;
-            const ballGeo = new THREE.SphereGeometry(0.6, 8, 8);
-            const ballMat = new THREE.MeshStandardMaterial({ color: colors[i%4], emissive: colors[i%4], emissiveIntensity: 1 });
-            const ball = new THREE.Mesh(ballGeo, ballMat);
-            ball.position.set(Math.cos(a)*r, t*35 - 15, Math.sin(a)*r);
-            treeGroup.add(ball);
-        }
-
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
         scene.add(treeGroup);
 
-        // 2d. 漂浮環境粒子
-        const starGeo = new THREE.BufferGeometry();
-        const starPos = [];
-        for(let i=0; i<1000; i++) starPos.push((Math.random()-0.5)*150, (Math.random()-0.5)*150, (Math.random()-0.5)*150);
-        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-        const starField = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, transparent: true, opacity: 0.5 }));
-        scene.add(starField);
-
-        // 3. AI 手勢辨識
-        const canvasCtx = document.getElementById('gesture-canvas').getContext('2d');
+        // 3. AI 手勢與相機核心 (三星優化版)
+        const videoElement = document.getElementById('video');
+        const canvasElement = document.getElementById('gesture-canvas');
+        const canvasCtx = canvasElement.getContext('2d');
         let currentMode = 'tree', photoIdx = 0, rotVel = 0.005, gestureCooldown = false;
         const mainImg = document.getElementById('gallery-photo');
         if(photos.length > 0) mainImg.src = photos[0];
 
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-        hands.setOptions({ maxNumHands: 1, minDetectionConfidence: 0.6 });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
         hands.onResults((res) => {
-            canvasCtx.save(); canvasCtx.clearRect(0,0,100,100); canvasCtx.drawImage(res.image, 0, 0, 100, 100);
-            if (res.multiHandLandmarks && res.multiHandLandmarks[0]) {
-                const m = res.multiHandLandmarks[0];
-                drawConnectors(canvasCtx, m, HAND_CONNECTIONS, {color: '#ffd700', lineWidth: 1});
-                const d = Math.sqrt(Math.pow(m[4].x - m[8].x, 2) + Math.pow(m[4].y - m[8].y, 2));
-                if (!gestureCooldown) {
-                    if (currentMode === 'tree') {
-                        rotVel = (m[8].x - 0.5) * 0.12;
-                        if (d > 0.45) { currentMode='gallery'; document.body.className='gallery-active'; document.getElementById('hint-text').innerText="相簿模式"; triggerFeedback(); }
-                    } else {
-                        if (d < 0.1) { currentMode='tree'; document.body.className=''; document.getElementById('hint-text').innerText="聖誕樹模式"; triggerFeedback(); }
-                        if (m[8].x < 0.25) changePhoto(1); else if (m[8].x > 0.75) changePhoto(-1);
+            canvasCtx.save();
+            canvasCtx.clearRect(0,0,100,100);
+            if (res.image) {
+                canvasCtx.drawImage(res.image, 0, 0, 100, 100);
+                if (res.multiHandLandmarks && res.multiHandLandmarks[0]) {
+                    const m = res.multiHandLandmarks[0];
+                    drawConnectors(canvasCtx, m, HAND_CONNECTIONS, {color: '#ffd700', lineWidth: 2});
+                    const d = Math.sqrt(Math.pow(m[4].x - m[8].x, 2) + Math.pow(m[4].y - m[8].y, 2));
+                    
+                    if (!gestureCooldown) {
+                        if (currentMode === 'tree') {
+                            rotVel = (m[8].x - 0.5) * 0.15;
+                            if (d > 0.4) { currentMode='gallery'; document.body.className='gallery-active'; triggerFeedback("相簿模式"); }
+                        } else {
+                            if (d < 0.12) { currentMode='tree'; document.body.className=''; triggerFeedback("聖誕樹模式"); }
+                            if (m[8].x < 0.25) changePhoto(1); else if (m[8].x > 0.75) changePhoto(-1);
+                        }
                     }
                 }
             }
             canvasCtx.restore();
         });
 
-        function triggerFeedback() {
-            gestureCooldown = true; document.getElementById('status-box').classList.add('flash');
+        async function initCamera() {
+            try {
+                // 強制請求前置鏡頭並優化解析度
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                videoElement.srcObject = stream;
+                // 確保影片播放後才啟動 MediaPipe
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play();
+                    const cam = new Camera(videoElement, {
+                        onFrame: async () => { await hands.send({image: videoElement}); },
+                        width: 640, height: 480
+                    });
+                    cam.start();
+                    document.getElementById('hint-text').innerText = "👐 張開手進入相簿";
+                };
+            } catch (err) {
+                document.getElementById('hint-text').innerText = "⚠️ 請點擊網址列旁的「權限」允許相機";
+            }
+        }
+
+        initCamera();
+
+        function triggerFeedback(txt) {
+            gestureCooldown = true; 
+            if(txt) document.getElementById('hint-text').innerText = txt;
+            document.getElementById('status-box').classList.add('flash');
             setTimeout(() => { document.getElementById('status-box').classList.remove('flash'); gestureCooldown = false; }, 1000);
         }
 
@@ -170,14 +175,9 @@
             triggerFeedback();
         }
 
-        new Camera(document.getElementById('video'), { onFrame: async () => await hands.send({image: document.getElementById('video')}), width: 100, height: 100 }).start();
-
         function render() {
             requestAnimationFrame(render);
             treeGroup.rotation.y += rotVel;
-            starField.rotation.y += 0.0005;
-            // 燈珠呼吸效果
-            lightDots.material.size = 0.4 + Math.sin(Date.now()*0.003)*0.1;
             renderer.render(scene, camera);
         }
         render();
