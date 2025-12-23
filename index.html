@@ -3,33 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Xmas - Samsung S24+ Optimized</title>
+    <title>AI Xmas Magic - Final Edition</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: 0.8s; }
         
-        /* 三星手機優化感應窗 - 圓型雷達 */
+        /* 三星手機優化感應窗 - 圓型雷達，避開底部工具列 */
         #gesture-canvas { 
-            position: absolute; bottom: 80px; right: 15px; width: 100px; height: 100px; 
+            position: absolute; bottom: 90px; right: 15px; width: 110px; height: 110px; 
             border: 2px solid #ffd700; border-radius: 50%; 
             z-index: 100; transform: scaleX(-1); background: rgba(0,0,0,0.5);
-            object-fit: cover; box-shadow: 0 0 15px rgba(255,215,0,0.3);
+            object-fit: cover; box-shadow: 0 0 15px rgba(255,215,0,0.4);
         }
         
         #gallery-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.96); z-index: 20; opacity: 0; pointer-events: none; transition: 0.5s; }
-        #gallery-photo { max-width: 90%; max-height: 65%; border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.1); object-fit: contain; }
+        #gallery-photo { max-width: 90%; max-height: 65%; border-radius: 12px; box-shadow: 0 0 40px rgba(255,255,255,0.15); object-fit: contain; }
         
         #lib-toggle { position: absolute; top: 15px; left: 15px; z-index: 150; background: rgba(255,255,255,0.1); border: 1px solid #ffd700; color: #fff; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; backdrop-filter: blur(5px); }
-        #library { position: absolute; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: #0f0f0f; z-index: 200; transition: 0.4s; padding: 25px; color: #ccc; overflow-y: auto; }
+        #library { position: absolute; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: #0f0f0f; z-index: 200; transition: 0.4s; padding: 25px; color: #ccc; overflow-y: auto; box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
         #library.open { left: 0; }
+        .slot { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         
         .ui-overlay { position: absolute; top: 12%; width: 100%; pointer-events: none; z-index: 10; text-align: center; color: white; }
-        .main-title { font-size: 1.5rem; letter-spacing: 6px; color: #ffd700; margin-bottom: 8px; font-weight: 300; }
-        #status-box { background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 25px; display: inline-block; border: 1px solid rgba(255,215,0,0.3); }
+        .main-title { font-size: 1.6rem; letter-spacing: 6px; color: #ffd700; margin-bottom: 8px; font-weight: 300; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        #status-box { background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 25px; display: inline-block; border: 1px solid rgba(255,215,0,0.3); backdrop-filter: blur(5px); }
         
         #video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         
-        body.gallery-active #canvas-container { filter: blur(25px) brightness(0.3); }
+        body.gallery-active #canvas-container { filter: blur(30px) brightness(0.3); }
         body.gallery-active #gallery-container { opacity: 1; pointer-events: auto; }
         .flash { animation: flash-info 0.6s ease; }
         @keyframes flash-info { 0% { background: #ffd700; color: #000; } 100% { background: rgba(0,0,0,0.7); color: #fff; } }
@@ -38,10 +39,10 @@
 <body>
     <button id="lib-toggle">⚙️</button>
     <div id="library">
-        <h3 style="color:#fff">📸 個人照片庫</h3>
-        <p style="font-size:12px; color:#888;">選擇裝置內照片，AI 將在揮手時展示</p>
+        <h3 style="color:#fff; margin-top:0;">📸 個人照片庫</h3>
+        <p style="font-size:12px; color:#888;">上傳後，張開手掌即可在星空中展示</p>
         <div id="file-inputs"></div>
-        <button style="width:100%; padding:15px; background:#ffd700; color:#000; border:none; border-radius:10px; font-weight:bold; margin-top:20px;" onclick="saveLocalPhotos()">儲存並重啟</button>
+        <button style="width:100%; padding:15px; background:#ffd700; color:#000; border:none; border-radius:10px; font-weight:bold; margin-top:10px; cursor:pointer;" onclick="saveLocalPhotos()">儲存設定並重啟</button>
     </div>
 
     <video id="video" autoplay playsinline muted></video>
@@ -50,7 +51,7 @@
     <div id="gallery-container"><img id="gallery-photo" src=""></div>
 
     <div class="ui-overlay">
-        <div class="main-title">STARRY XMAS</div>
+        <div class="main-title">REAL MAGIC XMAS</div>
         <div id="status-box"><div id="hint-text">請授權相機權限...</div></div>
     </div>
 
@@ -62,42 +63,82 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // 1. 照片讀取
+        // --- 1. 照片系統 ---
         let photos = JSON.parse(localStorage.getItem('local_xmas_gallery')) || [];
         const inputContainer = document.getElementById('file-inputs');
         for(let i=0; i<8; i++) {
-            inputContainer.innerHTML += `<div style="margin-bottom:12px;"><input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})"><img id="prev-${i}" style="width:40px;height:40px;display:${photos[i]?'inline-block':'none'};margin-top:5px;border-radius:4px;" src="${photos[i]||''}"></div>`;
+            const div = document.createElement('div');
+            div.className = 'slot';
+            div.innerHTML = `
+                <label style="font-size:12px; display:block; margin-bottom:5px;">位置 ${i+1}</label>
+                <input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})">
+                <img id="prev-${i}" style="width:40px;height:40px;display:${photos[i]?'inline-block':'none'};margin-top:8px;border-radius:4px;border:1px solid #444;" src="${photos[i]||''}">
+            `;
+            inputContainer.appendChild(div);
         }
         window.previewFile = (i) => {
-            const r = new FileReader(); r.onloadend = () => { const img = document.getElementById(`prev-${i}`); img.src = r.result; img.style.display = 'inline-block'; };
+            const r = new FileReader(); r.onloadend = () => { 
+                const img = document.getElementById(`prev-${i}`); 
+                img.src = r.result; 
+                img.style.display = 'inline-block'; 
+            };
             if (document.getElementById(`f-${i}`).files[0]) r.readAsDataURL(document.getElementById(`f-${i}`).files[0]);
         };
         window.saveLocalPhotos = () => {
-            const np = []; for(let i=0; i<8; i++){ const s = document.getElementById(`prev-${i}`).src; if(s.startsWith('data:')) np.push(s); }
-            localStorage.setItem('local_xmas_gallery', JSON.stringify(np)); location.reload();
+            const np = []; for(let i=0; i<8; i++){ 
+                const s = document.getElementById(`prev-${i}`).src; 
+                if(s.startsWith('data:')) np.push(s); 
+            }
+            try {
+                localStorage.setItem('local_xmas_gallery', JSON.stringify(np));
+                location.reload();
+            } catch(e) { alert("照片太多或太大了，請減少幾張照片！"); }
         };
         document.getElementById('lib-toggle').onclick = () => document.getElementById('library').classList.toggle('open');
 
-        // 2. Three.js 實體樹
+        // --- 2. Three.js 豪華實體聖誕樹 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.z = 65;
+        camera.position.set(0, 0, 65);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         const treeGroup = new THREE.Group();
+        // 實體樹身
         for(let i=0; i<3; i++) {
             const geo = new THREE.ConeGeometry(18 - i*4, 15, 32);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x0a3d0a });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x0a3d0a, roughness: 0.8 });
             const p = new THREE.Mesh(geo, mat); p.position.y = i*8 - 12;
             treeGroup.add(p);
         }
+        // 螺旋燈串粒子
+        const lightGeo = new THREE.BufferGeometry();
+        const lightPos = [];
+        for(let i=0; i<500; i++) {
+            const t = i / 500; const a = t * Math.PI * 20; const r = (1 - t) * 16;
+            lightPos.push(Math.cos(a)*r, t*38 - 15, Math.sin(a)*r);
+        }
+        lightGeo.setAttribute('position', new THREE.Float32BufferAttribute(lightPos, 3));
+        const lights = new THREE.Points(lightGeo, new THREE.PointsMaterial({ color: 0xffd700, size: 0.4, blending: THREE.AdditiveBlending }));
+        treeGroup.add(lights);
+
+        // 裝飾球
+        const ballColors = [0xff0000, 0xffd700, 0xffffff, 0x00ccff];
+        for(let i=0; i<30; i++) {
+            const t = Math.random(); const r = (1-t) * 16; const a = Math.random() * Math.PI * 2;
+            const bGeo = new THREE.SphereGeometry(0.7, 8, 8);
+            const bMat = new THREE.MeshStandardMaterial({ color: ballColors[i%4], emissive: ballColors[i%4], emissiveIntensity: 0.5 });
+            const b = new THREE.Mesh(bGeo, bMat);
+            b.position.set(Math.cos(a)*r, t*35 - 15, Math.sin(a)*r);
+            treeGroup.add(b);
+        }
+
         scene.add(new THREE.AmbientLight(0xffffff, 0.8));
         scene.add(treeGroup);
 
-        // 3. AI 手勢與相機核心 (三星優化版)
+        // --- 3. AI 手勢與相機核心 (三星優化版) ---
         const videoElement = document.getElementById('video');
         const canvasElement = document.getElementById('gesture-canvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -110,9 +151,9 @@
 
         hands.onResults((res) => {
             canvasCtx.save();
-            canvasCtx.clearRect(0,0,100,100);
+            canvasCtx.clearRect(0, 0, 110, 110);
             if (res.image) {
-                canvasCtx.drawImage(res.image, 0, 0, 100, 100);
+                canvasCtx.drawImage(res.image, 0, 0, 110, 110);
                 if (res.multiHandLandmarks && res.multiHandLandmarks[0]) {
                     const m = res.multiHandLandmarks[0];
                     drawConnectors(canvasCtx, m, HAND_CONNECTIONS, {color: '#ffd700', lineWidth: 2});
@@ -121,7 +162,7 @@
                     if (!gestureCooldown) {
                         if (currentMode === 'tree') {
                             rotVel = (m[8].x - 0.5) * 0.15;
-                            if (d > 0.4) { currentMode='gallery'; document.body.className='gallery-active'; triggerFeedback("相簿模式"); }
+                            if (d > 0.42) { currentMode='gallery'; document.body.className='gallery-active'; triggerFeedback("相簿模式"); }
                         } else {
                             if (d < 0.12) { currentMode='tree'; document.body.className=''; triggerFeedback("聖誕樹模式"); }
                             if (m[8].x < 0.25) changePhoto(1); else if (m[8].x > 0.75) changePhoto(-1);
@@ -134,16 +175,10 @@
 
         async function initCamera() {
             try {
-                // 強制請求前置鏡頭並優化解析度
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: "user",
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    } 
+                    video: { facingMode: "user", width: 640, height: 480 } 
                 });
                 videoElement.srcObject = stream;
-                // 確保影片播放後才啟動 MediaPipe
                 videoElement.onloadedmetadata = () => {
                     videoElement.play();
                     const cam = new Camera(videoElement, {
@@ -154,7 +189,7 @@
                     document.getElementById('hint-text').innerText = "👐 張開手進入相簿";
                 };
             } catch (err) {
-                document.getElementById('hint-text').innerText = "⚠️ 請點擊網址列旁的「權限」允許相機";
+                document.getElementById('hint-text').innerText = "⚠️ 請點擊網址列左側允許相機";
             }
         }
 
@@ -164,7 +199,7 @@
             gestureCooldown = true; 
             if(txt) document.getElementById('hint-text').innerText = txt;
             document.getElementById('status-box').classList.add('flash');
-            setTimeout(() => { document.getElementById('status-box').classList.remove('flash'); gestureCooldown = false; }, 1000);
+            setTimeout(() => { document.getElementById('status-box').classList.remove('flash'); gestureCooldown = false; }, 1200);
         }
 
         function changePhoto(s) {
@@ -178,6 +213,7 @@
         function render() {
             requestAnimationFrame(render);
             treeGroup.rotation.y += rotVel;
+            lights.material.size = 0.4 + Math.sin(Date.now()*0.003)*0.1;
             renderer.render(scene, camera);
         }
         render();
