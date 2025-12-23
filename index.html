@@ -3,42 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Xmas - Invisible Pro</title>
+    <title>AI Xmas - Starry Particle Style</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: 0.8s; }
-        
-        /* 徹底隱藏視訊標籤，不佔空間也不顯示 */
-        #video-hidden { 
-            position: absolute; 
-            width: 1px; 
-            height: 1px; 
-            opacity: 0; 
-            pointer-events: none; 
+        /* 基礎樣式：營造深邃宇宙感 */
+        body { 
+            margin: 0; 
+            background: radial-gradient(circle at center, #0a121a 0%, #000 100%); 
+            overflow: hidden; 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            touch-action: none; 
+            color: #fff;
         }
+
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        #gallery-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.96); z-index: 20; opacity: 0; pointer-events: none; transition: 0.5s; }
-        #gallery-photo { max-width: 90%; max-height: 65%; border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.1); object-fit: contain; }
+        /* 隱藏視訊 */
+        #video-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         
-        #lib-toggle { position: absolute; top: 15px; left: 15px; z-index: 150; background: rgba(255,255,255,0.1); border: 1px solid #ffd700; color: #fff; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; backdrop-filter: blur(5px); }
-        #library { position: absolute; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: #0f0f0f; z-index: 200; transition: 0.4s; padding: 25px; color: #ccc; overflow-y: auto; }
+        /* 頂部標題：仿影片中的發光感 */
+        .ui-header {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .main-title {
+            font-size: 1.8rem;
+            font-weight: 200;
+            letter-spacing: 12px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.2);
+            margin: 0;
+        }
+        .sub-title {
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        /* 狀態提示框：極簡線條風 */
+        #status-container {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #status-box {
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 10px 30px;
+            background: linear-gradient(to bottom, transparent, rgba(255,215,0,0.05));
+            transition: all 0.5s;
+        }
+        #hint-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 2px;
+        }
+
+        /* 設定按鈕：簡約圓圈 */
+        #lib-toggle {
+            position: absolute;
+            top: 30px;
+            left: 25px;
+            z-index: 150;
+            background: transparent;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            color: #ffd700;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        /* 相簿選單 */
+        #library {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100%;
+            background: rgba(5, 10, 15, 0.95);
+            z-index: 200;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 30px;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+        }
         #library.open { left: 0; }
         
-        .ui-overlay { position: absolute; top: 12%; width: 100%; pointer-events: none; z-index: 10; text-align: center; color: white; }
-        #status-box { background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 25px; display: inline-block; border: 1px solid rgba(255,215,0,0.3); }
+        #gallery-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.9); z-index: 20; opacity: 0; pointer-events: none; transition: 0.8s; }
+        #gallery-photo { max-width: 85%; max-height: 60%; border: 1px solid rgba(255,255,255,0.2); padding: 5px; background: #000; box-shadow: 0 0 50px rgba(0,0,0,1); }
         
-        body.gallery-active #canvas-container { filter: blur(25px) brightness(0.3); }
+        /* 動畫反饋 */
+        .flash #status-box { border-bottom-color: #ffd700; transform: translateY(-5px); }
+        .flash #hint-text { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+
+        body.gallery-active #canvas-container { filter: blur(20px) brightness(0.3); transform: scale(1.1); }
         body.gallery-active #gallery-container { opacity: 1; pointer-events: auto; }
-        .flash { animation: flash-info 0.6s ease; }
-        @keyframes flash-info { 0% { background: #ffd700; color: #000; } 100% { background: rgba(0,0,0,0.7); color: #fff; } }
     </style>
 </head>
 <body>
-    <button id="lib-toggle">⚙️</button>
+    <button id="lib-toggle">⚙</button>
     <div id="library">
-        <h3 style="color:#fff">📸 個人照片庫</h3>
-        <div id="file-inputs"></div>
-        <button style="width:100%; padding:15px; background:#ffd700; color:#000; border:none; border-radius:10px; font-weight:bold; margin-top:20px;" onclick="saveLocalPhotos()">儲存並重啟</button>
+        <h2 style="font-weight: 200; color: #ffd700; letter-spacing: 4px;">SETTINGS</h2>
+        <div id="file-inputs" style="margin-top: 30px;"></div>
+        <button style="width:100%; padding:15px; background:transparent; color:#ffd700; border:1px solid #ffd700; border-radius:2px; font-weight:bold; margin-top:20px; letter-spacing: 2px;" onclick="saveLocalPhotos()">SAVE & RESTART</button>
     </div>
 
     <video id="video-hidden" autoplay playsinline muted></video>
@@ -46,8 +127,13 @@
     <div id="canvas-container"></div>
     <div id="gallery-container"><img id="gallery-photo" src=""></div>
 
-    <div class="ui-overlay">
-        <div id="status-box"><div id="hint-text">AI 準備中...</div></div>
+    <div class="ui-header">
+        <h1 class="main-title">STARRY XMAS</h1>
+        <div class="sub-title">AI Gesture Motion Sensing</div>
+    </div>
+
+    <div id="status-container">
+        <div id="status-box"><div id="hint-text">INITIALIZING...</div></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
@@ -57,26 +143,29 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // 1. 照片處理邏輯 (保持不變)
+        // 1. 照片處理
         let photos = JSON.parse(localStorage.getItem('local_xmas_gallery')) || [];
         const inputContainer = document.getElementById('file-inputs');
-        for(let i=0; i<8; i++) {
-            inputContainer.innerHTML += `<div style="margin-bottom:12px;"><input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})"><img id="prev-${i}" style="width:40px;height:40px;display:${photos[i]?'inline-block':'none'};margin-top:5px;border-radius:4px;" src="${photos[i]||''}"></div>`;
+        for(let i=0; i<6; i++) {
+            inputContainer.innerHTML += `<div style="margin-bottom:15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <input type="file" id="f-${i}" accept="image/*" onchange="previewFile(${i})" style="font-size: 10px; color: #888;">
+                <img id="prev-${i}" style="width:30px;height:30px;display:${photos[i]?'inline-block':'none'};margin-top:5px;border:1px solid #ffd700;" src="${photos[i]||''}">
+            </div>`;
         }
         window.previewFile = (i) => {
             const r = new FileReader(); r.onloadend = () => { const img = document.getElementById(`prev-${i}`); img.src = r.result; img.style.display = 'inline-block'; };
             if (document.getElementById(`f-${i}`).files[0]) r.readAsDataURL(document.getElementById(`f-${i}`).files[0]);
         };
         window.saveLocalPhotos = () => {
-            const np = []; for(let i=0; i<8; i++){ const s = document.getElementById(`prev-${i}`).src; if(s.startsWith('data:')) np.push(s); }
+            const np = []; for(let i=0; i<6; i++){ const s = document.getElementById(`prev-${i}`).src; if(s.startsWith('data:')) np.push(s); }
             localStorage.setItem('local_xmas_gallery', JSON.stringify(np)); location.reload();
         };
         document.getElementById('lib-toggle').onclick = () => document.getElementById('library').classList.toggle('open');
 
-        // 2. Three.js 聖誕樹 (保持不變)
+        // 2. Three.js 聖誕樹 (維持原有邏輯但微調視覺)
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.z = 65;
+        camera.position.set(0, 10, 65);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -84,50 +173,35 @@
 
         const treeGroup = new THREE.Group();
         for(let i=0; i<3; i++) {
-            const geo = new THREE.ConeGeometry(18 - i*4, 15, 32);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x0a3d0a });
+            const geo = new THREE.ConeGeometry(18 - i*4, 15, 4); // 改為四邊錐體更有幾何感
+            const mat = new THREE.MeshStandardMaterial({ color: 0x051a05, wireframe: false });
             const p = new THREE.Mesh(geo, mat); p.position.y = i*8 - 12;
             treeGroup.add(p);
         }
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        const lp = new THREE.PointLight(0xffd700, 2, 100); lp.position.set(20, 20, 20); scene.add(lp);
         scene.add(treeGroup);
 
-        // 3. AI 背景偵測邏輯 (移除所有繪圖代碼，純計算)
+        // 3. AI 背景偵測 (隱形執行)
         const videoHidden = document.getElementById('video-hidden');
-        let currentMode = 'tree', photoIdx = 0, rotVel = 0.005, gestureCooldown = false;
+        let currentMode = 'tree', photoIdx = 0, rotVel = 0.008, gestureCooldown = false;
         const mainImg = document.getElementById('gallery-photo');
         if(photos.length > 0) mainImg.src = photos[0];
 
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-        hands.setOptions({ 
-            maxNumHands: 1, 
-            modelComplexity: 1, 
-            minDetectionConfidence: 0.5, 
-            minTrackingConfidence: 0.5 
-        });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
         hands.onResults((res) => {
-            // 背景運算：偵測手勢數據
             if (res.multiHandLandmarks && res.multiHandLandmarks[0]) {
                 const m = res.multiHandLandmarks[0];
                 const d = Math.sqrt(Math.pow(m[4].x - m[8].x, 2) + Math.pow(m[4].y - m[8].y, 2));
-                
                 if (!gestureCooldown) {
                     if (currentMode === 'tree') {
-                        rotVel = (m[8].x - 0.5) * 0.15;
-                        if (d > 0.4) { 
-                            currentMode='gallery'; 
-                            document.body.className='gallery-active'; 
-                            triggerFeedback("✨ 相簿模式"); 
-                        }
+                        rotVel = (m[8].x - 0.5) * 0.18;
+                        if (d > 0.4) { currentMode='gallery'; document.body.className='gallery-active'; triggerFeedback("GALLERY MODE"); }
                     } else {
-                        if (d < 0.12) { 
-                            currentMode='tree'; 
-                            document.body.className=''; 
-                            triggerFeedback("🎄 聖誕樹模式"); 
-                        }
-                        if (m[8].x < 0.25) changePhoto(1); 
-                        else if (m[8].x > 0.75) changePhoto(-1);
+                        if (d < 0.12) { currentMode='tree'; document.body.className=''; triggerFeedback("TREE MODE"); }
+                        if (m[8].x < 0.25) changePhoto(1); else if (m[8].x > 0.75) changePhoto(-1);
                     }
                 }
             }
@@ -135,47 +209,35 @@
 
         async function initCamera() {
             try {
-                // 三星瀏覽器優化：設定理想的預覽尺寸
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+                    video: { facingMode: "user", width: 640, height: 480 } 
                 });
                 videoHidden.srcObject = stream;
-                
                 videoHidden.onloadedmetadata = () => {
-                    videoHidden.play();
                     const cam = new Camera(videoHidden, {
-                        onFrame: async () => { await hands.send({image: videoHidden}); },
-                        width: 640, height: 480
+                        onFrame: async () => { await hands.send({image: videoHidden}); }
                     });
                     cam.start();
-                    document.getElementById('hint-text').innerText = "👐 張開手進入相簿";
+                    document.getElementById('hint-text').innerText = "OPEN YOUR HAND TO START";
                 };
             } catch (err) {
-                document.getElementById('hint-text').innerText = "⚠️ 請開啟相機權限以啟用感應";
+                document.getElementById('hint-text').innerText = "CAMERA ERROR";
             }
         }
-
         initCamera();
 
-        // UI 反饋邏輯
         function triggerFeedback(txt) {
             gestureCooldown = true; 
             if(txt) document.getElementById('hint-text').innerText = txt;
-            document.getElementById('status-box').classList.add('flash');
-            setTimeout(() => { 
-                document.getElementById('status-box').classList.remove('flash'); 
-                gestureCooldown = false; 
-            }, 1000);
+            document.getElementById('status-container').classList.add('flash');
+            setTimeout(() => { document.getElementById('status-container').classList.remove('flash'); gestureCooldown = false; }, 1200);
         }
 
         function changePhoto(s) {
             if(photos.length === 0) return;
             photoIdx = (photoIdx + s + photos.length) % photos.length;
             mainImg.style.opacity = 0;
-            setTimeout(() => { 
-                mainImg.src = photos[photoIdx]; 
-                mainImg.style.opacity = 1; 
-            }, 200);
+            setTimeout(() => { mainImg.src = photos[photoIdx]; mainImg.style.opacity = 1; }, 200);
             triggerFeedback();
         }
 
