@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gesture Christmas - Magic Burst</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; }
+        #video { position: absolute; bottom: 20px; right: 20px; width: 150px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); transform: scaleX(-1); z-index: 10; }
+        .overlay {
+            position: absolute; top: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: center; pointer-events: none; padding: 40px 0;
+            color: white; text-align: center; z-index: 5;
+        }
+        .title { font-size: 24px; letter-spacing: 10px; font-weight: 200; text-shadow: 0 0 20px #fff; }
+        .hint { font-size: 14px; opacity: 0.6; background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 20px; }
+        #status { color: #00ffcc; font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="title">MERRY CHRISTMAS</div>
+        <div>
+            <div class="hint">左右揮手旋轉 · 張開手掌噴發雪花</div>
+            <div id="status">正在啟動 AI 系統...</div>
+        </div>
+    </div>
+    <video id="video" autoplay playsinline></video>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- 1. 3D 場景初始化 ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // 建立聖誕樹主體粒子
+        const treeGroup = new THREE.Group();
+        const treeParticles = 6000;
+        const treeGeo = new THREE.BufferGeometry();
+        const treePos = new Float32Array(treeParticles * 3);
+        const treeColors = new Float32Array(treeParticles * 3);
+
+        for(let i=0; i<treeParticles; i++) {
+            const t = i / treeParticles;
+            const angle = 60 * t;
+            const radius = (1 - t) * 14;
+            treePos[i*3] = Math.cos(angle) * radius + (Math.random()-0.5)*0.5;
+            treePos[i*3+1] = t * 35 - 15;
+            treePos[i*3+2] = Math.sin(angle) * radius + (Math.random()-0.5)*0.5;
+            
+            const color = new THREE.Color();
+            color.setHSL(0.35 + t * 0.1, 0.8, 0.4 + t * 0.4); // 綠色漸層到頂部金黃
+            treeColors[i*3] = color.r; treeColors[i*3+1] = color.g; treeColors[i*3+2] = color.b;
+        }
+        treeGeo.setAttribute('position', new THREE.BufferAttribute(treePos, 3));
+        treeGeo.setAttribute('color', new THREE.BufferAttribute(treeColors, 3));
+        const treeMat = new THREE.PointsMaterial({ size: 0.12, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.8 });
+        const treeMesh = new THREE.Points(treeGeo, treeMat);
+        treeGroup.add(treeMesh);
+        scene.add(treeGroup);
+
+        // 建立驚喜雪花粒子 (初始隱藏)
+        const snowCount = 1000;
+        const snowGeo = new THREE.BufferGeometry();
+        const snowPos = new Float32Array(snowCount * 3);
+        for(let i=0; i<snowCount; i++) {
+            snowPos[i*3] = snowPos[i*3+1] = snowPos[i*3+2] = 0;
+        }
+        snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+        const snowMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, opacity: 0 });
+        const snowMesh = new THREE.Points(snowGeo, snowMat);
+        scene.add(snowMesh);
+
+        camera.position.z = 45;
+
+        // --- 2. AI 手勢識別核心 ---
+        const videoElement = document.getElementById('video');
+        const statusText = document.getElementById('status');
+        let targetRotVel = 0.005;
+        let isHandOpen = false;
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+
+        hands.onResults((results) => {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                statusText.innerText = "✨ AI 已連線：感應中";
+                const landmarks = results.multiHandLandmarks[0];
+
+                // 1. 控制旋轉: 使用食指 (Landmark 8)
+                const indexX = landmarks[8].x;
+                targetRotVel = (indexX - 0.5) * 0.15;
+
+                // 2. 偵測手掌張開: 計算大拇指與小拇指距離
+                const thumbTip = landmarks[4];
+                const pinkyTip = landmarks[20];
+                const distance = Math.sqrt(Math.pow(thumbTip.x - pinkyTip.x, 2) + Math.pow(thumbTip.y - pinkyTip.y, 2));
+                isHandOpen = distance > 0.4; // 距離大於閥值視為張開
+            } else {
+                statusText.innerText = "👋 請將手放在鏡頭前";
+                targetRotVel *= 0.95;
+                isHandOpen = false;
+            }
+        });
+
+        const cam = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 640, height: 480
+        });
+        cam.start();
+
+        // --- 3. 動畫與噴發邏輯 ---
+        function updateSnow() {
+            const positions = snowMesh.geometry.attributes.position.array;
+            if (isHandOpen) {
+                snowMat.opacity = Math.min(snowMat.opacity + 0.1, 1);
+                for(let i=0; i<snowCount; i++) {
+                    if (Math.abs(positions[i*3+1]) > 20 || positions[i*3] === 0) {
+                        // 重置雪花到中心噴發
+                        positions[i*3] = (Math.random()-0.5) * 2;
+                        positions[i*3+1] = -10;
+                        positions[i*3+2] = (Math.random()-0.5) * 2;
+                    }
+                    // 噴發速度
+                    positions[i*3] *= 1.05;
+                    positions[i*3+1] += 0.5;
+                    positions[i*3+2] *= 1.05;
+                }
+            } else {
+                snowMat.opacity *= 0.9; // 慢慢消失
+            }
+            snowMesh.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            treeGroup.rotation.y += targetRotVel;
+            updateSnow();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // 螢幕尺寸自適應
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
